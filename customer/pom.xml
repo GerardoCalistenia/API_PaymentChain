@@ -13,6 +13,10 @@
 	<groupId>com.paymentchain</groupId>
 	<artifactId>customer</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<modules>
+		<module>paymentchainparent</module>
+	</modules>
 	<name>customer</name>
 	<description>Demo project for Spring Boot</description>
 
