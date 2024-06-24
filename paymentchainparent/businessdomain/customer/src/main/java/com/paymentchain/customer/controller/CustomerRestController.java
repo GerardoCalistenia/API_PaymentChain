@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -63,6 +64,14 @@ public class CustomerRestController {
         connection.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS));
     });
 
+
+    @Autowired
+    private Environment env;
+
+    @GetMapping("/check")
+    public String check(){
+        return "Hello your propperty value is: "+ env.getProperty("custom.activeprofileName");
+    }
 
     @GetMapping()
     public List<Customer> list() {
