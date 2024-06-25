@@ -1,1 +1,6 @@
 .DS_Store
+# Ignorar archivos compilados de Java
+**/target/
+**/build/
+**/bin/
+**/out/
