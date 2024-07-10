@@ -47,30 +47,42 @@ public class CustomerRestController {
 
     @Autowired
     CustomerRepository customerRepository;
-    private final WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
+    
+   /* private final WebClient.Builder webClientBuilder;
 
     public CustomerRestController(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
-    }
+    }*/
 
+    //webClient requires HttpClient library to work propertly       
     HttpClient client = HttpClient.create()
-    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-    .option(ChannelOption.SO_KEEPALIVE, true)
-    .option(EpollChannelOption.TCP_KEEPIDLE, 300)
-    .option(EpollChannelOption.TCP_KEEPINTVL, 60)
-    .responseTimeout(Duration.ofSeconds(1))
-    .doOnConnected(connection -> {
-        connection.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS));
-        connection.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS));
-    });
-
-
-    @Autowired
-    private Environment env;
-
-    @GetMapping("/check")
-    public String check(){
-        return "Hello your propperty value is: "+ env.getProperty("custom.activeprofileName");
+            //Connection Timeout: is a period within which a connection between a client and a server must be established
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(EpollChannelOption.TCP_KEEPIDLE, 300)
+            .option(EpollChannelOption.TCP_KEEPINTVL, 60)
+            //Response Timeout: The maximun time we wait to receive a response after sending a request
+            .responseTimeout(Duration.ofSeconds(1))
+            // Read and Write Timeout: A read timeout occurs when no data was read within a certain 
+            //period of time, while the write timeout when a write operation cannot finish at a specific time
+            .doOnConnected(connection -> {
+                connection.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS));
+                connection.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS));
+            });
+    
+    
+    // @Value("${custom.activeprofile}")
+   // private String profile;
+    
+        @Autowired
+   private Environment env;
+    
+     @GetMapping("/check")
+    public String check() {
+        return "Hello your proerty value is: "+ env.getProperty("custom.activeprofileName");
     }
 
     @GetMapping()
@@ -124,16 +136,15 @@ public class CustomerRestController {
                 String productName = getProductName(x.getProductId());
                 x.setProductName(productName);
             });
-            //find all transactions that belong this account number
+          /*  //find all transactions that belong this account number
             List<?> transactions = getTransactions(customer.getIban());
-            customer.setTransactions(transactions);
+            customer.setTransactions(transactions);*/
   
         }
         return customer;
     }
 
-
-/**
+    /**
      * Call Product Microservice , find a product by Id and return it name
      *
      * @param id of product to find
@@ -141,9 +152,9 @@ public class CustomerRestController {
      */
     private String getProductName(long id) {
         WebClient build = webClientBuilder.clientConnector(new ReactorClientHttpConnector(client))
-                .baseUrl("http://localhost:8083/product")
+                .baseUrl("http://BUSINESSDOMAIN-PRODUCT/product")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultUriVariables(Collections.singletonMap("url", "http://localhost:8083/product"))
+                .defaultUriVariables(Collections.singletonMap("url", "http://BUSINESSDOMAIN-PRODUCT/product"))
                 .build();
         JsonNode block = build.method(HttpMethod.GET).uri("/" + id)
                 .retrieve().bodyToMono(JsonNode.class).block();
