@@ -34,6 +34,7 @@
     <modules>
         <module>configserver</module>
         <module>eurekaserver</module>
+        <module>springbootadmin</module>
     </modules>
 
 </project>

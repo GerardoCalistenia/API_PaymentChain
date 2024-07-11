@@ -7,26 +7,18 @@ import com.paymentchain.customer.repository.CustomerRepository;
 
 import io.netty.channel.ChannelOption;
 import io.netty.channel.epoll.EpollChannelOption;
-//import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-//import io.swagger.v3.oas.models.media.MediaType;
-import reactor.netty.http.client.HttpClient;
-
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import java.time.Duration;
-import java.util.Collections;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.util.Collections;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -37,10 +29,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.MediaType;
-import org.springframework.http.HttpHeaders;
+import reactor.netty.http.client.HttpClient;
 
+/**
+ *
+ * @author sotobotero
+ */
 @RestController
 @RequestMapping("/customer")
 public class CustomerRestController {
@@ -50,39 +46,44 @@ public class CustomerRestController {
 
     @Autowired
     private WebClient.Builder webClientBuilder;
-    
-   /* private final WebClient.Builder webClientBuilder;
 
-    public CustomerRestController(WebClient.Builder webClientBuilder) {
-        this.webClientBuilder = webClientBuilder;
-    }*/
+    /*
+     * private final WebClient.Builder webClientBuilder;
+     * 
+     * public CustomerRestController(WebClient.Builder webClientBuilder) {
+     * this.webClientBuilder = webClientBuilder;
+     * }
+     */
 
-    //webClient requires HttpClient library to work propertly       
+    // webClient requires HttpClient library to work propertly
     HttpClient client = HttpClient.create()
-            //Connection Timeout: is a period within which a connection between a client and a server must be established
+            // Connection Timeout: is a period within which a connection between a client
+            // and a server must be established
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(EpollChannelOption.TCP_KEEPIDLE, 300)
             .option(EpollChannelOption.TCP_KEEPINTVL, 60)
-            //Response Timeout: The maximun time we wait to receive a response after sending a request
+            // Response Timeout: The maximun time we wait to receive a response after
+            // sending a request
             .responseTimeout(Duration.ofSeconds(1))
-            // Read and Write Timeout: A read timeout occurs when no data was read within a certain 
-            //period of time, while the write timeout when a write operation cannot finish at a specific time
+            // Read and Write Timeout: A read timeout occurs when no data was read within a
+            // certain
+            // period of time, while the write timeout when a write operation cannot finish
+            // at a specific time
             .doOnConnected(connection -> {
                 connection.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS));
                 connection.addHandlerLast(new WriteTimeoutHandler(5000, TimeUnit.MILLISECONDS));
             });
-    
-    
+
     // @Value("${custom.activeprofile}")
-   // private String profile;
-    
-        @Autowired
-   private Environment env;
-    
-     @GetMapping("/check")
+    // private String profile;
+
+    @Autowired
+    private Environment env;
+
+    @GetMapping("/check")
     public String check() {
-        return "Hello your proerty value is: "+ env.getProperty("custom.activeprofileName");
+        return "Hello your proerty value is: " + env.getProperty("custom.activeprofileName");
     }
 
     @GetMapping()
@@ -131,15 +132,17 @@ public class CustomerRestController {
         if (customer != null) {
             List<CustomerProduct> products = customer.getProducts();
 
-            //for each product find it name
+            // for each product find it name
             products.forEach(x -> {
                 String productName = getProductName(x.getProductId());
                 x.setProductName(productName);
             });
-          /*  //find all transactions that belong this account number
-            List<?> transactions = getTransactions(customer.getIban());
-            customer.setTransactions(transactions);*/
-  
+            /*
+             * //find all transactions that belong this account number
+             * List<?> transactions = getTransactions(customer.getIban());
+             * customer.setTransactions(transactions);
+             */
+
         }
         return customer;
     }
@@ -173,17 +176,17 @@ public class CustomerRestController {
         WebClient build = webClientBuilder.clientConnector(new ReactorClientHttpConnector(client))
                 .baseUrl("http://localhost:8082/transaction")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();       
-        
+                .build();
+
         Optional<List<?>> transactionsOptional = Optional.ofNullable(build.method(HttpMethod.GET)
-        .uri(uriBuilder -> uriBuilder
-                .path("/customer/transactions")
-                .queryParam("ibanAccount", iban)
-                .build())
-        .retrieve()
-        .bodyToFlux(Object.class)
-        .collectList()
-        .block());       
+                .uri(uriBuilder -> uriBuilder
+                        .path("/customer/transactions")
+                        .queryParam("ibanAccount", iban)
+                        .build())
+                .retrieve()
+                .bodyToFlux(Object.class)
+                .collectList()
+                .block());
 
         return transactionsOptional.orElse(Collections.emptyList());
     }
