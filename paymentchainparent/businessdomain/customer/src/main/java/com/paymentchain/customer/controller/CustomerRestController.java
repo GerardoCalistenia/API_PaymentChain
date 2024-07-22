@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
-@RequestMapping("/customer/V1")
+@RequestMapping("/customer")
 public class CustomerRestController {
 
     @Autowired
